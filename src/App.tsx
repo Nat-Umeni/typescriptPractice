@@ -1,13 +1,17 @@
-import { useState } from "react";
-import reactLogo from "./assets/react.svg";
-import viteLogo from "/vite.svg";
+import React, { useEffect, useState } from "react";
 import "./App.css";
 import { Task } from "./types";
-import { IoMdAddCircleOutline } from "react-icons/io";
+import { IoMdAddCircleOutline, IoMdSave } from "react-icons/io";
+import {
+  AiOutlineFileDone,
+  AiOutlineDelete,
+  AiOutlineEdit,
+} from "react-icons/ai";
 
 function App() {
   const [tasks, setTasks] = useState<Task[]>([]);
-  const [title, setTitle] = useState("");
+  const [title, setTitle] = useState<string>("");
+  const [editTitle, setEditTitle] = useState<string>("");
 
   const addTask = (title: string) => {
     setTasks([
@@ -22,28 +26,47 @@ function App() {
     setTitle("");
   };
 
-  const handleTaskComplete = () => {};
+  // const handleTaskComplete = (taskId: string) => {
+  //   setTasks(() => {
+  //     return tasks.map((task) => {
+  //       if (task.id === taskId) {
+  //         return { ...task, completed: true };
+  //       }
+  //       return task;
+  //     });
+  //   });
+  // };
+
+  const [taskBeingEdited, setTaskBeingEdited] = useState<Task | null>(null);
+  const handleEditTask = (taskId: string): void => {
+    const task: Task | undefined = tasks.find((task) => task.id === taskId);
+    if (task) {
+      setTaskBeingEdited(task);
+      setEditTitle(task.title);
+    }
+  };
+
+  const saveEditedTask = () => {
+    if (!taskBeingEdited) return;
+
+    const task: Task | undefined = tasks.find((task) => task.id === taskBeingEdited.id);
+    
+    if (task) {
+      task.title = editTitle;
+      setTaskBeingEdited(null);
+      setEditTitle("");
+    }
+  };
+
+  const handleTaskDelete = (taskId: string): void => {
+    setTasks((prevTasks: Task[]): Task[] => {
+      return prevTasks.filter((task) => task.id !== taskId);
+    });
+  };  
 
   return (
     <>
-      <div className="flex justify-center gap-8 mb-8">
-        <a href="https://vite.dev" target="_blank">
-          <img
-            src={viteLogo}
-            className="h-24 p-6 transition-[filter] duration-300 will-change-[filter] hover:drop-shadow-[0_0_2em_#646cffaa]"
-            alt="Vite logo"
-          />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img
-            src={reactLogo}
-            className="h-24 p-6 transition-[filter] duration-300 will-change-[filter] hover:drop-shadow-[0_0_2em_#61dafbaa] motion-safe:animate-[spin_20s_linear_infinite]"
-            alt="React logo"
-          />
-        </a>
-      </div>
-
-      <h1 className="text-center text-3xl font-bold mb-4">Add a task</h1>
+      <h1 className="mb-4 text-3xl font-bold text-center">Add a task</h1>
 
       <div className="p-8">
         <form onSubmit={handleSubmit} className="flex gap-2">
@@ -56,9 +79,10 @@ function App() {
           />
           <button
             type="submit"
-            className="px-5 py-2.5 text-base font-medium text-white bg-[#1a1a1a] rounded-lg border border-transparent cursor-pointer transition-colors duration-200 hover:ring-2 hover:ring-[#646cff] focus:outline-none focus:ring-2 focus:ring-[#646cff]"
+            aria-label="Add task"
+            className="text-3xl text-white transition-colors duration-200 cursor-pointer hover:text-green-500"
           >
-            <IoMdAddCircleOutline />
+            <IoMdAddCircleOutline title="Add task" />
           </button>
         </form>
       </div>
@@ -69,14 +93,63 @@ function App() {
             key={task.id}
             className="flex justify-between items-center p-4 rounded border border-[#646cff]"
           >
-            <div>{task.title}</div>
             <div>
-              <button
-                onClick={handleTaskComplete}
-                className="px-5 py-2.5 text-base font-medium text-white bg-[#1a1a1a] rounded-lg border border-transparent cursor-pointer transition-colors duration-200 hover:ring-2 hover:ring-[#646cff] focus:outline-none focus:ring-2 focus:ring-[#646cff]"
-              >
-                Mark Complete
-              </button>
+              {taskBeingEdited?.id === task.id ? (
+                <input
+                  type="text"
+                  className="flex-1 px-4 py-2 rounded bg-[#1a1a1a] focus:outline-none focus:ring-2 focus:ring-[#646cff] transition-all duration-200"
+                  placeholder="Task title"
+                  onInput={(e) => setEditTitle(e.currentTarget.value)}
+                  onBlur={saveEditedTask}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      saveEditedTask(); 
+                    }
+                  }}
+                  value={editTitle}
+                />
+              ) : (
+                <span className="text-white">{task.title}</span>
+              )}
+            </div>
+            <div className="flex items-center justify-between gap-2">
+              <div>
+                {taskBeingEdited?.id === task.id ? (
+                  <button
+                    aria-label="Save edited task"
+                    className="flex text-3xl text-white transition-colors duration-200 cursor-pointer hover:text-green-500"
+                    onClick={saveEditedTask}
+                  >
+                    <IoMdSave title="Save edited task" />
+                  </button>
+                ) : (
+                  <button
+                    aria-label="Edit title"
+                    className="flex text-3xl text-white transition-colors duration-200 cursor-pointer hover:text-green-500"
+                    onClick={() => handleEditTask(task.id)}
+                  >
+                    <AiOutlineEdit title="Edit title" />
+                  </button>
+                )}
+              </div>
+              {/* <div>
+                <button
+                  aria-label="Mark Complete"
+                  className="flex text-3xl text-white transition-colors duration-200 cursor-pointer hover:text-green-500"
+                  onClick={() => handleTaskComplete(task.id)}
+                >
+                  <AiOutlineFileDone title="Mark as complete" />
+                </button>
+              </div> */}
+              <div>
+                <button
+                  aria-label="Delete Task"
+                  className="flex text-3xl text-white transition-colors duration-200 cursor-pointer hover:text-red-500"
+                  onClick={() => handleTaskDelete(task.id)}
+                >
+                  <AiOutlineDelete title="Delete task" />
+                </button>
+              </div>
             </div>
           </div>
         ))}
