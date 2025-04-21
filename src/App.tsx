@@ -13,14 +13,14 @@ function App() {
   const [title, setTitle] = useState<string>("");
   const [editTitle, setEditTitle] = useState<string>("");
 
-  const addTask = (title: string) => {
+  const addTask = (title: string): void => {
     setTasks([
       { id: Date.now().toString(), title, completed: false },
       ...tasks,
     ]);
   };
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>): void => {
     e.preventDefault();
     addTask(title);
     setTitle("");
@@ -39,7 +39,7 @@ function App() {
 
   const [taskBeingEdited, setTaskBeingEdited] = useState<Task | null>(null);
   const handleEditTask = (taskId: string): void => {
-    const task: Task | undefined = tasks.find((task) => task.id === taskId);
+    const task = tasks.find((task) => task.id === taskId);
     if (task) {
       setTaskBeingEdited(task);
       setEditTitle(task.title);
@@ -49,7 +49,7 @@ function App() {
   const saveEditedTask = () => {
     if (!taskBeingEdited) return;
 
-    const task: Task | undefined = tasks.find((task) => task.id === taskBeingEdited.id);
+    const task = tasks.find((task) => task.id === taskBeingEdited.id);
     
     if (task) {
       task.title = editTitle;
