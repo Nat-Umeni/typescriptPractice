@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import axios from 'axios';
 import "./App.css";
 import { Task } from "./types";
 import { IoMdAddCircleOutline, IoMdSave } from "react-icons/io";
@@ -62,7 +63,11 @@ function App() {
     setTasks((prevTasks: Task[]): Task[] => {
       return prevTasks.filter((task) => task.id !== taskId);
     });
-  };  
+  };
+
+  useEffect(() => {
+    axios.get("/api/test").then((response) => console.log(response));
+  }, []);
 
   return (
     <>
