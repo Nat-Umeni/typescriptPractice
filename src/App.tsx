@@ -1,10 +1,10 @@
 import React, { useEffect, useState } from "react";
-import axios from 'axios';
+import axios from "axios";
 import "./App.css";
 import { Task } from "./types";
 import { IoMdAddCircleOutline, IoMdSave } from "react-icons/io";
 import {
-  AiOutlineFileDone,
+  // AiOutlineFileDone,
   AiOutlineDelete,
   AiOutlineEdit,
 } from "react-icons/ai";
@@ -14,11 +14,25 @@ function App() {
   const [title, setTitle] = useState<string>("");
   const [editTitle, setEditTitle] = useState<string>("");
 
-  const addTask = (title: string): void => {
-    setTasks([
-      { id: Date.now().toString(), title, completed: false },
-      ...tasks,
-    ]);
+  const addTask = async (title: string): Promise<void | boolean> => {
+    const response = await axios.post("/api/tasks", {
+        title: title,
+        completed: false,
+      },
+      {
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }
+    );
+
+    if (response.status !== 201) {
+      console.error("Error adding task "+ response);
+      return false;
+    }
+
+    setTasks([...tasks, response.data.task]);
+
   };
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>): void => {
@@ -27,19 +41,9 @@ function App() {
     setTitle("");
   };
 
-  // const handleTaskComplete = (taskId: string) => {
-  //   setTasks(() => {
-  //     return tasks.map((task) => {
-  //       if (task.id === taskId) {
-  //         return { ...task, completed: true };
-  //       }
-  //       return task;
-  //     });
-  //   });
-  // };
 
   const [taskBeingEdited, setTaskBeingEdited] = useState<Task | null>(null);
-  const handleEditTask = (taskId: string): void => {
+  const handleEditTask = (taskId: string|number): void => {
     const task = tasks.find((task) => task.id === taskId);
     if (task) {
       setTaskBeingEdited(task);
@@ -51,7 +55,7 @@ function App() {
     if (!taskBeingEdited) return;
 
     const task = tasks.find((task) => task.id === taskBeingEdited.id);
-    
+
     if (task) {
       task.title = editTitle;
       setTaskBeingEdited(null);
@@ -59,15 +63,22 @@ function App() {
     }
   };
 
-  const handleTaskDelete = (taskId: string): void => {
+  const handleTaskDelete = (taskId: string|number): void => {
     setTasks((prevTasks: Task[]): Task[] => {
       return prevTasks.filter((task) => task.id !== taskId);
     });
   };
 
   useEffect(() => {
-    axios.get("/api/test").then((response) => console.log(response));
+    axios.get("/api/tasks").then(({ data }) =>{
+      setTasks(data)
+    });
   }, []);
+
+  //For debugging
+  useEffect(() => { 
+    console.log(tasks);
+  }, [tasks]);
 
   return (
     <>
@@ -108,7 +119,7 @@ function App() {
                   onBlur={saveEditedTask}
                   onKeyDown={(e) => {
                     if (e.key === "Enter") {
-                      saveEditedTask(); 
+                      saveEditedTask();
                     }
                   }}
                   value={editTitle}
@@ -131,7 +142,7 @@ function App() {
                   <button
                     aria-label="Edit title"
                     className="flex text-3xl text-white transition-colors duration-200 cursor-pointer hover:text-green-500"
-                    onClick={() => handleEditTask(task.id)}
+                    onClick={() => task.id && handleEditTask(task.id)}
                   >
                     <AiOutlineEdit title="Edit title" />
                   </button>
@@ -150,7 +161,7 @@ function App() {
                 <button
                   aria-label="Delete Task"
                   className="flex text-3xl text-white transition-colors duration-200 cursor-pointer hover:text-red-500"
-                  onClick={() => handleTaskDelete(task.id)}
+                  onClick={() => task.id && handleTaskDelete(task.id)}
                 >
                   <AiOutlineDelete title="Delete task" />
                 </button>
