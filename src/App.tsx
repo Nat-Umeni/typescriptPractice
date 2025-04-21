@@ -11,8 +11,8 @@ function App() {
 
   const addTask = (title: string) => {
     setTasks([
-      ...tasks,
       { id: Date.now().toString(), title, completed: false },
+      ...tasks,
     ]);
   };
 
@@ -22,9 +22,7 @@ function App() {
     setTitle("");
   };
 
-  const handleTaskComplete = () => {
-    
-  };
+  const handleTaskComplete = () => {};
 
   return (
     <>
@@ -51,13 +49,14 @@ function App() {
         <form onSubmit={handleSubmit} className="flex gap-2">
           <input
             type="text"
-            className="flex-1 px-4 py-2 rounded border border-gray-300"
+            className="flex-1 px-4 py-2 rounded bg-[#1a1a1a] focus:outline-none focus:ring-2 focus:ring-[#646cff] transition-all duration-200"
             placeholder="Task title"
             onInput={(e) => setTitle(e.currentTarget.value)}
+            value={title}
           />
           <button
             type="submit"
-            className="px-4 py-2 text-white rounded"
+            className="px-5 py-2.5 text-base font-medium text-white bg-[#1a1a1a] rounded-lg border border-transparent cursor-pointer transition-colors duration-200 hover:ring-2 hover:ring-[#646cff] focus:outline-none focus:ring-2 focus:ring-[#646cff]"
           >
             <IoMdAddCircleOutline />
           </button>
@@ -68,11 +67,16 @@ function App() {
         {tasks.map((task) => (
           <div
             key={task.id}
-            className="flex justify-between items-center p-4 rounded border border-gray-300"
+            className="flex justify-between items-center p-4 rounded border border-[#646cff]"
           >
             <div>{task.title}</div>
             <div>
-              <button onClick={handleTaskComplete}>Mark Complete</button>
+              <button
+                onClick={handleTaskComplete}
+                className="px-5 py-2.5 text-base font-medium text-white bg-[#1a1a1a] rounded-lg border border-transparent cursor-pointer transition-colors duration-200 hover:ring-2 hover:ring-[#646cff] focus:outline-none focus:ring-2 focus:ring-[#646cff]"
+              >
+                Mark Complete
+              </button>
             </div>
           </div>
         ))}
