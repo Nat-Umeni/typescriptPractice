@@ -9,7 +9,7 @@ export default defineConfig({
     proxy: {
       // Proxy all API requests to the backend (Express)
       '/api': {
-        target: 'http://localhost:5000',
+        target: 'http://localhost:1507',
         changeOrigin: true,
         secure: false,
         rewrite: (path) => path.replace(/^\/api/, ''),
