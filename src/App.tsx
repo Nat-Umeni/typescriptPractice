@@ -12,7 +12,7 @@ import {
 function App() {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [title, setTitle] = useState<string>("");
-  const [editTitle, setEditTitle] = useState<string>("");
+  const [editedTitle, setEditedTitle] = useState<string>("");
 
   const addTask = async (title: string): Promise<void | boolean> => {
     const response = await axios.post("/api/tasks", {
@@ -41,25 +41,43 @@ function App() {
     setTitle("");
   };
 
-
   const [taskBeingEdited, setTaskBeingEdited] = useState<Task | null>(null);
   const handleEditTask = (taskId: string|number): void => {
-    const task = tasks.find((task) => task.id === taskId);
+    const task: Task | undefined = tasks.find((task) => task.id === taskId);
     if (task) {
       setTaskBeingEdited(task);
-      setEditTitle(task.title);
+      setEditedTitle(task.title);
     }
   };
 
-  const saveEditedTask = () => {
+  const saveEditedTask = async () => {
     if (!taskBeingEdited) return;
 
-    const task = tasks.find((task) => task.id === taskBeingEdited.id);
+    const task: Task | undefined = tasks.find((task) => task.id === taskBeingEdited.id);
 
     if (task) {
-      task.title = editTitle;
+      task.title = editedTitle;
+
+      try {
+        const response = await axios.put(`/api/tasks/${taskBeingEdited.id}`, {
+          task: task
+        });
+
+        // console.log(response)
+
+        if (response.status !== 200) {
+          throw new Error("Error updating task " + response)
+        }
+
+      } catch (error) {
+        console.error(error);
+      }
+   
       setTaskBeingEdited(null);
-      setEditTitle("");
+      setEditedTitle("");
+
+      // Update the tasks state
+
     }
   };
 
@@ -69,13 +87,14 @@ function App() {
     });
   };
 
+  // On page load get all the tasks and add them to state
   useEffect(() => {
     axios.get("/api/tasks").then(({ data }) =>{
       setTasks(data)
     });
   }, []);
 
-  //For debugging
+  // For debugging
   useEffect(() => { 
     console.log(tasks);
   }, [tasks]);
@@ -115,14 +134,14 @@ function App() {
                   type="text"
                   className="flex-1 px-4 py-2 rounded bg-[#1a1a1a] focus:outline-none focus:ring-2 focus:ring-[#646cff] transition-all duration-200"
                   placeholder="Task title"
-                  onInput={(e) => setEditTitle(e.currentTarget.value)}
+                  onInput={(e) => setEditedTitle(e.currentTarget.value)}
                   onBlur={saveEditedTask}
                   onKeyDown={(e) => {
                     if (e.key === "Enter") {
                       saveEditedTask();
                     }
                   }}
-                  value={editTitle}
+                  value={editedTitle}
                 />
               ) : (
                 <span className="text-white">{task.title}</span>

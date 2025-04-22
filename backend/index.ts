@@ -1,4 +1,4 @@
-import express, { Request, Response } from "express";
+import express, { NextFunction, Request, Response } from "express";
 import cors from "cors";
 import sqlite3 from "sqlite3";
 import { Task } from "./types";
@@ -62,6 +62,22 @@ app.post("/tasks", (req: Request, res: Response) => {
       });
     }
   );
+});
+
+app.put('/tasks/:id', (req: Request, res: Response, next: NextFunction) => {
+  console.log("PUT /tasks/:id called with id:", req.params.id);
+
+  // db.run(
+  //   "UPDATE tasks SET title = ?, completed = ? WHERE id = ?",
+  //   [req.body.title, req.body.completed, req.params.id],
+  //   function (err) {
+  //     if (err) {
+  //       console.error(err.message);
+  //       return res.status(500).json({ error: err.message });
+  //     }
+  // });
+
+  res.status(200).json({ message: "Route hit" });
 });
 
 app.listen(port, () => console.log(`Listening on port ${port}`));
