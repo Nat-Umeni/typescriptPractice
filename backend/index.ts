@@ -24,6 +24,11 @@ db.serialize(() => {
   );
 });
 
+
+app.get('/', (_req, res) => {
+  res.send('OK');
+});
+
 app.get("/tasks", (req: Request, res: Response) => {
   db.all<Task[]>("SELECT * FROM tasks", (err, rows) => {
     if (err) {
