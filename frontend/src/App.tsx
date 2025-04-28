@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import './App.css';
+import Error from './components/Error';
 import { Task } from './types';
 import { IoMdAddCircleOutline, IoMdSave } from 'react-icons/io';
 import {
@@ -13,30 +14,22 @@ function App() {
     const [tasks, setTasks] = useState<Task[]>([]);
     const [title, setTitle] = useState<string>('');
     const [editedTitle, setEditedTitle] = useState<string>('');
+    const [error, setError] = useState<string>('');
 
     const addTask = async (title: string): Promise<void | boolean> => {
-
+        setError('');
         try {
-            const response = await axios.post(
-                '/api/tasks',
-                {
-                    title: title,
-                    completed: false
-                },
-                {
-                    headers: {
-                        'Content-Type': 'application/json'
-                    }
-                }
-            );
-    
+            const response = await axios.post('/api/tasks', {
+                title: title,
+                completed: false
+            });
+
             setTasks([...tasks, response.data.task]);
-            
-        } catch (error) {
+        } catch (error: any) {
             console.error(error);
+            setError('Error occurred while adding task');
             return false;
         }
-    
     };
 
     const handleSubmit = (e: React.FormEvent<HTMLFormElement>): void => {
@@ -47,14 +40,18 @@ function App() {
 
     const [taskBeingEdited, setTaskBeingEdited] = useState<Task | null>(null);
     const handleEditTask = (taskId: string | number): void => {
+        setError('');
         const task: Task | undefined = tasks.find((task) => task.id === taskId);
-        if (task) {
-            setTaskBeingEdited(task);
-            setEditedTitle(task.title);
+        if (!task) {
+            setError('A fatal error occurred');
         }
+
+        setTaskBeingEdited(task);
+        setEditedTitle(task.title);
     };
 
     const saveEditedTask = async () => {
+        setError('');
         if (!taskBeingEdited) return;
 
         const task: Task | undefined = tasks.find((task) => task.id === taskBeingEdited.id);
@@ -67,15 +64,13 @@ function App() {
                     task
                 });
 
-                console.log(response.data.task);
-
                 // Update the tasks state
                 setTaskBeingEdited(null);
                 setEditedTitle('');
                 setTasks(tasks.map((t) => (t.id === task.id ? response.data.task : t)));
-
-            } catch (error) {
-                console.error('Error occurred');
+            } catch (error: any) {
+                console.error(error);
+                setError('Error occurred while updating task');
                 return false;
             }
         }
@@ -121,6 +116,8 @@ function App() {
                     </button>
                 </form>
             </div>
+
+            <Error message={error} />
 
             <ul className="mt-4 space-y-2">
                 {tasks.map((task) => (

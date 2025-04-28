@@ -17,9 +17,9 @@ app.use(express.json());
 const port = process.env.PORT || 1507;
 
 db.serialize(() => {
-    db.run('DROP TABLE IF EXISTS tasks');
+    // db.run('DROP TABLE IF EXISTS tasks');
 
-    db.run('CREATE TABLE tasks (id INTEGER PRIMARY KEY AUTOINCREMENT, title TEXT, completed BOOLEAN)');
+    db.run('CREATE TABLE IF NOT EXISTS tasks (id INTEGER PRIMARY KEY AUTOINCREMENT, title TEXT, completed BOOLEAN)');
 });
 
 app.get('/', (req: Request, res: Response) => {
@@ -78,7 +78,7 @@ app.put('/tasks/:id', (req: Request, res: Response, next: NextFunction) => {
     db.run('UPDATE tasks SET title = ?, completed = ? WHERE id = ?', [title, completed, id], function (err) {
         if (err) {
             console.error(err.message);
-            return res.status(500).json({ error: err.message });
+            return res.status(500).json({ message: err.message });
         }
     });
 
