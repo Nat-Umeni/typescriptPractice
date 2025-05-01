@@ -1,0 +1,32 @@
+name: Deploy to Home Server
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      # Checkout the code
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      # Set up SSH and deploy to your server
+      - name: Set up SSH key
+        uses: webfactory/ssh-agent@v0.5.3
+        with:
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+
+      # Deploy to home server
+      - name: Deploy to home server
+        run: |
+          ssh -o StrictHostKeyChecking=no username@your_home_server_ip << EOF
+            cd /var/www/myapp || exit
+            git pull origin main || exit
+            npm install || exit
+            npm run build || exit
+            pm2 restart myapp || exit  # If you are using pm2 to manage your Node app
+          EOF
