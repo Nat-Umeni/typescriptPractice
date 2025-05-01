@@ -61,6 +61,11 @@ function App() {
             return;
         }
 
+        if (editedTitle.trim() === '') {
+            setError('Title is required');
+            return;
+        }
+
         // Get whatever the task was beufore it was edited,
         // and set the title to the one from state
         const updatedTask = { ...task, title: editedTitle };
