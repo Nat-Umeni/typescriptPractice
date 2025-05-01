@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import './App.css';
+import { addTask, updateTask } from './api/tasks';
 import Error from './components/Error';
-import { Task } from './types';
+import { Task } from './types/types';
 import { IoMdAddCircleOutline, IoMdSave } from 'react-icons/io';
 import {
     // AiOutlineFileDone,
@@ -16,32 +17,26 @@ function App() {
     const [editedTitle, setEditedTitle] = useState<string>('');
     const [error, setError] = useState<string>('');
 
-    const addTask = async (title: string): Promise<void | boolean> => {
-        setError('');
+    const handleSubmit = async (e: React.FormEvent<HTMLFormElement>): Promise<void> => {
+        e.preventDefault();
 
         if (title.trim() === '') {
             setError('Title is required');
-            return false;
+            return;
         }
 
-        try {
-            const response = await axios.post('/api/tasks', {
-                title: title,
-                completed: false
-            });
+        const response = await addTask(title);
 
-            setTasks([...tasks, response.data.task]);
-        } catch (error: any) {
-            console.error(error);
+        if (!response) {
             setError('Error occurred while adding task');
-            return false;
+            return;
         }
-    };
 
-    const handleSubmit = (e: React.FormEvent<HTMLFormElement>): void => {
-        e.preventDefault();
-        addTask(title);
+        const task: Task = response.data.task;
+        
+        setTasks([...tasks, task]);
         setTitle('');
+        setError('');
     };
 
     const [taskBeingEdited, setTaskBeingEdited] = useState<Task | null>(null);
@@ -62,28 +57,46 @@ function App() {
         if (!taskBeingEdited) return;
 
         const task: Task | undefined = tasks.find((task) => task.id === taskBeingEdited.id);
-
-        if (task) {
-            task.title = editedTitle;
-
-            try {
-                const response = await axios.put(`/api/tasks/${taskBeingEdited.id}`, {
-                    task
-                });
-
-                // Update the tasks state
-                setTaskBeingEdited(null);
-                setEditedTitle('');
-                setTasks(tasks.map((t) => (t.id === task.id ? response.data.task : t)));
-            } catch (error: any) {
-                console.error(error);
-                setError('Error occurred while updating task');
-                return false;
-            }
+        if (!task){
+            setError('A fatal error occurred, no task was found');
+            return;
         }
+
+  
+        const updatedTask = { ...task, title: editedTitle };
+     
+        const result = await updateTask(updatedTask);
+        
+        if (!result) {
+            setError('Error occurred while updating task');
+            return;
+        }
+
+        console.log(result);
+
+        setTasks(tasks.map((t) => (t.id === task.id ? result : t)));
+        setTaskBeingEdited(null);
+        setEditedTitle('');
+
+
+        // try {
+        //     const response = await axios.put(`/api/tasks/${taskBeingEdited.id}`, {
+        //         task
+        //     });
+
+        //     // Update the tasks state
+        //     setTaskBeingEdited(null);
+        //     setEditedTitle('');
+        //     setTasks(tasks.map((t) => (t.id === task.id ? response.data.task : t)));
+        // } catch (error: any) {
+        //     console.error(error);
+        //     setError('Error occurred while updating task');
+        //     return false;
+        // }
+        
     };
 
-    const handleTaskDelete = async (taskId: string | number): void => {
+    const handleTaskDelete = async (taskId: string | number): Promise<void> => {
         if (!taskId) {
             setError('A fatal error occurred');
             return;
@@ -98,7 +111,6 @@ function App() {
             }
 
             setTasks(tasks.filter((task) => task.id !== taskId));
-            
         } catch (error: any) {
             console.error(error);
             setError('Error occurred while deleting task');

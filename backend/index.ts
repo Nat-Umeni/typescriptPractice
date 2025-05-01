@@ -1,7 +1,7 @@
 import express, { NextFunction, Request, Response } from 'express';
 import cors from 'cors';
 import sqlite3 from 'sqlite3';
-import { Task } from './types';
+import { Task } from './types/types';
 const app = express();
 
 const db = new sqlite3.Database('./database.db');
@@ -80,18 +80,25 @@ app.put('/tasks/:id', (req: Request, res: Response, next: NextFunction) => {
             console.error(err.message);
             return res.status(500).json({ message: err.message });
         }
+
+        db.get('SELECT * FROM tasks WHERE id = ?', [id], (err, updatedTask) => {
+            if (err) {
+                console.error(err.message);
+                return res.status(500).json({ message: 'Could not retrieve updated task' });
+            }
+
+            res.status(200).json({
+                message: 'Updated the task',
+                task: updatedTask
+            });
+        });
     });
-
-    console.log('Updated the task');
-
-    res.status(200).json({ message: 'Updated the task', task: req.body.task });
-    return;
 });
 
 app.delete('/tasks/:id', (req: Request, res: Response, next: NextFunction) => {
     
     const { id } = req.params;
-    
+
     if (!id) {
         console.error('Missing required fields');
         res.status(400).json({ error: 'Missing required fields' });
