@@ -33,7 +33,7 @@ app.get('/tasks', (req: Request, res: Response) => {
             return res.status(500).json({ error: err.message });
         }
 
-        res.json(rows);
+       return res.status(200).json({ tasks: rows });
     });
 });
 

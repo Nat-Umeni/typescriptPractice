@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import axios from 'axios';
 import './App.css';
-import { addTask, updateTask } from './api/tasks';
+import { getAllTasks, addTask, updateTask, deleteTask,  } from './api/tasks';
 import Error from './components/Error';
 import { Task } from './types/types';
 import { IoMdAddCircleOutline, IoMdSave } from 'react-icons/io';
@@ -62,7 +61,8 @@ function App() {
             return;
         }
 
-  
+        // Get whatever the task was beufore it was edited,
+        // and set the title to the one from state
         const updatedTask = { ...task, title: editedTitle };
      
         const result = await updateTask(updatedTask);
@@ -72,27 +72,9 @@ function App() {
             return;
         }
 
-        console.log(result);
-
         setTasks(tasks.map((t) => (t.id === task.id ? result : t)));
         setTaskBeingEdited(null);
         setEditedTitle('');
-
-
-        // try {
-        //     const response = await axios.put(`/api/tasks/${taskBeingEdited.id}`, {
-        //         task
-        //     });
-
-        //     // Update the tasks state
-        //     setTaskBeingEdited(null);
-        //     setEditedTitle('');
-        //     setTasks(tasks.map((t) => (t.id === task.id ? response.data.task : t)));
-        // } catch (error: any) {
-        //     console.error(error);
-        //     setError('Error occurred while updating task');
-        //     return false;
-        // }
         
     };
 
@@ -103,30 +85,29 @@ function App() {
         }
 
         try {
-            const response = await axios.delete(`/api/tasks/${taskId}`);
+            const taskDeleted = await deleteTask(taskId);
 
-            if (response.status !== 204) {
+            if (!taskDeleted) {
                 setError('Error occurred while deleting task');
                 return;
             }
 
             setTasks(tasks.filter((task) => task.id !== taskId));
-        } catch (error: any) {
-            console.error(error);
+
+        } catch (error) {
             setError('Error occurred while deleting task');
             return;
         }
-
-        setTasks((prevTasks: Task[]): Task[] => {
-            return prevTasks.filter((task) => task.id !== taskId);
-        });
     };
 
     // On page load get all the tasks and add them to state
     useEffect(() => {
-        axios.get('/api/tasks').then(({ data }) => {
-            setTasks(data);
-        });
+        const fetchData = async () => {
+            const tasksFromAPI: Task[] = await getAllTasks();
+            setTasks(tasksFromAPI);
+        };
+        
+        fetchData();
     }, []);
 
     // For debugging
