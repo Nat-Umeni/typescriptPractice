@@ -18,6 +18,12 @@ function App() {
 
     const addTask = async (title: string): Promise<void | boolean> => {
         setError('');
+
+        if (title.trim() === '') {
+            setError('Title is required');
+            return false;
+        }
+
         try {
             const response = await axios.post('/api/tasks', {
                 title: title,
@@ -39,11 +45,12 @@ function App() {
     };
 
     const [taskBeingEdited, setTaskBeingEdited] = useState<Task | null>(null);
-    const handleEditTask = (taskId: string | number): void => {
+    const handleEditTask = (taskToBeEditedID: string | number): void => {
         setError('');
-        const task: Task | undefined = tasks.find((task) => task.id === taskId);
+        const task: Task | undefined = tasks.find((task) => task.id === taskToBeEditedID);
         if (!task) {
             setError('A fatal error occurred');
+            return;
         }
 
         setTaskBeingEdited(task);
@@ -76,7 +83,28 @@ function App() {
         }
     };
 
-    const handleTaskDelete = (taskId: string | number): void => {
+    const handleTaskDelete = async (taskId: string | number): void => {
+        if (!taskId) {
+            setError('A fatal error occurred');
+            return;
+        }
+
+        try {
+            const response = await axios.delete(`/api/tasks/${taskId}`);
+
+            if (response.status !== 204) {
+                setError('Error occurred while deleting task');
+                return;
+            }
+
+            setTasks(tasks.filter((task) => task.id !== taskId));
+            
+        } catch (error: any) {
+            console.error(error);
+            setError('Error occurred while deleting task');
+            return;
+        }
+
         setTasks((prevTasks: Task[]): Task[] => {
             return prevTasks.filter((task) => task.id !== taskId);
         });

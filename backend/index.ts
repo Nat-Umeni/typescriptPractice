@@ -88,4 +88,40 @@ app.put('/tasks/:id', (req: Request, res: Response, next: NextFunction) => {
     return;
 });
 
+app.delete('/tasks/:id', (req: Request, res: Response, next: NextFunction) => {
+    
+    const { id } = req.params;
+    
+    if (!id) {
+        console.error('Missing required fields');
+        res.status(400).json({ error: 'Missing required fields' });
+        return;
+    }
+
+    db.all<Task[]>('SELECT * FROM tasks', (err, rows) => {
+        if (err) {
+            console.error(err.message);
+            return res.status(500).json({ error: err.message });
+        }
+
+        if (rows.length === 0) {
+            console.error('Task not found');
+            res.status(404).json({ error: 'Task not found' });
+            return;
+        }
+    });
+
+    db.run('DELETE FROM tasks WHERE id = ?', [id], function (err) {
+        if (err) {
+            console.error(err.message);
+            return res.status(500).json({ message: err.message });
+        }
+    });
+
+    console.log('Deleted the task');
+
+    res.status(204).json({ message: 'Deleted the task' });
+    return;
+});
+
 app.listen(port, () => console.log(`Listening on port ${port}`));
